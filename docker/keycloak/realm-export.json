@@ -1,0 +1,94 @@
+{
+  "realm": "app-realm",
+  "enabled": true,
+  "displayName": "Enterprise Boilerplate Realm",
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Administrator Role"
+      },
+      {
+        "name": "USER",
+        "description": "Standard User Role"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "frontend-client",
+      "name": "Frontend React Application",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "rootUrl": "http://localhost:80/",
+      "baseUrl": "http://localhost:80/",
+      "redirectUris": [
+        "http://localhost:80/*",
+        "http://localhost/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:80/*##http://localhost/*##http://localhost:3000/*"
+      }
+    },
+    {
+      "clientId": "backend-client",
+      "name": "Backend NestJS API",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@boilerplate.local",
+      "firstName": "System",
+      "lastName": "Administrator",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN",
+        "USER"
+      ]
+    },
+    {
+      "username": "user",
+      "enabled": true,
+      "email": "user@boilerplate.local",
+      "firstName": "Standard",
+      "lastName": "User",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "USER"
+      ]
+    }
+  ]
+}
