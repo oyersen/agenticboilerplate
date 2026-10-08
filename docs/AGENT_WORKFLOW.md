@@ -156,8 +156,50 @@ export const ProductListPage: React.FC = () => {
 };
 ```
 
-### 7. Adım: Doğrulama (Verification)
+### 7. Çekirdek Yeteneklerin Kullanımı (Core Recipes)
 
-Ajan her modülü bitirdiğinde mutlaka şu kontrolleri çalıştırıp sıfır hata almalıdır:
-- Backend: `npm run typecheck`
-- Frontend: `npm run typecheck`
+#### A. Dinamik Ayar Okuma (Hardcoding'den Kaçınma):
+```typescript
+@Injectable()
+export class OrdersService {
+  constructor(private readonly settings: SystemSettingsService) {}
+
+  async calculateShipping(total: number) {
+    const freeShippingThreshold = this.settings.getNumber('FREE_SHIPPING_THRESHOLD', 500);
+    return total >= freeShippingThreshold ? 0 : 50;
+  }
+}
+```
+
+#### B. Özelliği Dinamik Bayrağa Bağlama (Feature Flag):
+```typescript
+// Backend:
+@Get('export')
+@RequireFeature('PRODUCT_EXPORT')
+exportExcel() { ... }
+
+// Frontend:
+<FeatureGate flag="PRODUCT_EXPORT">
+  <Button onClick={handleExport}>Excel İndir</Button>
+</FeatureGate>
+```
+
+#### C. Kritik Eylemi Loglama (Audit Log):
+```typescript
+await this.auditLog.log({
+  userId: currentUser.sub,
+  username: currentUser.preferred_username,
+  action: 'PRICE_UPDATE',
+  resource: 'PRODUCT',
+  resourceId: product.id,
+  oldValues: { price: oldPrice },
+  newValues: { price: newPrice },
+});
+```
+
+### 8. Adım: Doğrulama (Verification)
+
+Ajan her modülü bitirdiğinde mutlaka kök dizinden şu kontrolü koşturmalıdır:
+```bash
+npm run check
+```
