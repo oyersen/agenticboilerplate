@@ -17,5 +17,12 @@ This workspace is an enterprise boilerplate. All coding assistants MUST adhere t
    - Prefer surgical targeted edits over whole-file rewrites to minimize output tokens.
    - Use the root `npm run check` script for fast compiler-driven verification instead of speculating errors.
    - Keep agent responses concise, focused on executable code and state.
-6. **Self-Verification:**
+6. **Anti-Hardcoding & Dynamic Settings:**
+   - Never hardcode limits, external URLs, prices, or business rules in code. Use `ConfigService` for static env and `SystemSettingsService` (`src/core/settings/`) for dynamic admin-editable settings.
+7. **Dynamic Feature Flags & Capabilities:**
+   - Protect optional or new capabilities with `@RequireFeature('KEY')` on the backend and `<FeatureGate flag="KEY">` on the frontend.
+8. **Security & Audit Logging:**
+   - Insecure default credentials in `.env` are strictly rejected in production.
+   - Record admin modifications and sensitive business operations via `AuditLogService.log(...)`.
+9. **Self-Verification:**
    - Always run `npm run check` (runs typecheck on both frontend and backend) before completing a feature.

@@ -1,0 +1,10 @@
+import { SetMetadata } from '@nestjs/common';
+
+export const REQUIRE_FEATURE_KEY = 'REQUIRE_FEATURE_KEY';
+
+/**
+ * Decorator to enforce dynamic Feature Flag check on controllers or handler methods.
+ * Example: @RequireFeature('INVOICING_EXPORT')
+ */
+export const RequireFeature = (featureKey: string) =>
+  SetMetadata(REQUIRE_FEATURE_KEY, featureKey);

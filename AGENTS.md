@@ -51,6 +51,20 @@ Kullanıcı bu soruları yanıtladıktan sonra:
 - **API İstemcisi:** Component içinde asla ikinci bir `axios` instance oluşturma. `src/api/client.ts` kullan. Token ekleme ve hata yakalama bu istemcide otomatiktir.
 - **State Yönetimi:** Feature bazlı Zustand store slice'ları oluştur (`src/store/slices/*Slice.ts`).
 
+### E. Hardcoding Yasağı & Dinamik Ayarlar (SystemSettings)
+- **Kod İçine Değer Gömmek KESİNLİKLE YASAKTIR:** Limitler, para tutarları, max dosya boyutları, periyotlar veya harici servis URL'leri asla TypeScript kodunun içine hardcode edilemez.
+- **Statik Yapılandırma:** Sadece ortam değişkenleri (`.env` ve `ConfigService`) üzerinden okunur.
+- **Dinamik İş Kuralları:** Admin tarafından değiştirilebilir olmalı ve `SystemSettingsService` (`src/core/settings/`) üzerinden çekilmelidir (`this.settingsService.getNumber('MAX_LIMIT')`).
+
+### F. Dinamik Özellik Yönetimi (Feature Flags)
+- Yeni eklenen veya opsiyonel modüller/yetenekler veritabanı üzerinden admin tarafından açılıp kapatılabilir olmalıdır:
+  - Backend controller veya metodu: `@RequireFeature('FEATURE_KEY')` ile korunmalıdır.
+  - Frontend arayüzü: `<FeatureGate flag="FEATURE_KEY">` bileşeni ile sarmalanmalıdır.
+
+### G. Güvenlik, Şifre Hijyeni ve Denetim İzi (Audit Logging)
+- **Zayıf Şifre Yasağı:** `.env` dosyalarında veya yapılandırmalarda asla sıradan/default şifreler (`postgres`, `admin`, `123456`, `backend-secret`) kullanılamaz. Üretim ortamında (`NODE_ENV=production`) sistem zayıf şifreleri otomatik olarak reddeder.
+- **Denetim İzi (Audit Log):** Admin tarafından yapılan tüm ayar değişiklikleri, özellik bayrakları veya kritik domain güncellemeleri `AuditLogService.log(...)` ile kayıt altına alınmalıdır.
+
 ---
 
 ## 3. ADIM ADIM FEATURE İNŞA PROTOKOLÜ (VERTICAL SLICE)
