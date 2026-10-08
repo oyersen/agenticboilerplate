@@ -1,0 +1,13 @@
+{
+  "name": "enterprise-agent-boilerplate",
+  "version": "1.0.0",
+  "description": "Enterprise Agentic Boilerplate with NestJS, Keycloak, and React",
+  "private": true,
+  "scripts": {
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
+    "typecheck:backend": "npm --prefix backend run typecheck",
+    "typecheck:frontend": "npm --prefix frontend run typecheck",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "check": "npm run typecheck"
+  }
+}
