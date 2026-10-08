@@ -96,3 +96,20 @@ Yeni bir modül veya özellik eklerken şu zinciri **sırasıyla ve eksiksiz** t
 - **Keycloak Admin:** `http://localhost:8080` (admin / admin)
 - **PostgreSQL:** `localhost:5432` (postgres / postgres)
 - **Swagger Dokümantasyonu:** `http://localhost:80/api/docs`
+
+---
+
+## 5. TOKEN TASARRUFU & UZMAN MİMAR VİBE CODİNG İLKELERİ
+
+Yapay zekâ bağlam penceresini (context window) korumak ve token tüketimini minimuma indirmek için şu kurallara kesinlikle uyulmalıdır:
+
+1. **Bağlam Filtreleme (.agentignore Uyumu):**
+   - `realm-export.json`, lock dosyaları, `.git`, `dist`, loglar ve build çıktılarını ASLA chat bağlamına alma veya okuma.
+2. **Cerrahi Düzenleme (Surgical Edits):**
+   - 200 satırlık bir dosyada 5 satır değişecekse tüm dosyayı baştan üretme (`overwrite` yerine hedefli `replace_file_content` veya diff kullan). Bu, çıktı tokenlarını %80 azaltır.
+3. **Derleyici Odaklı Hızlı Geri Bildirim (Compiler-Driven Loop):**
+   - Dosyaları tekrar tekrar okuyarak "acaba hata var mı" diye tahmin etme. Kök dizindeki `npm run check` komutunu çalıştır ve sadece derleyicinin verdiği spesifik satır hatasını hedefe yönelik düzelt.
+4. **Few-Shot Referans Kullanımı:**
+   - Yeni bir CRUD yazarken sıfırdan mimari uydurmak yerine `docs/AGENT_WORKFLOW.md` içindeki hazır şablonu referans al.
+5. **Öz ve Net İletişim (Concise Output):**
+   - Kod yazarken gereksiz uzun teorik açıklamalar, tekrarlı özetler üretme. Doğrudan uygulanabilir, temiz ve test edilmiş çözümü sun.

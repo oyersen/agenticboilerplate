@@ -1,0 +1,32 @@
+# Files and directories ignored by AI Coding Agents to save context window and tokens
+
+# Version Control
+.git/
+
+# Dependencies & Locks
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build & Cache Outputs
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+.cache/
+
+# Large JSON / Database Seeds
+docker/keycloak/realm-export.json
+postgres_data/
+
+# Logs & Temporary Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
