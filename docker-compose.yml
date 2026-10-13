@@ -26,6 +26,25 @@ services:
       - app-network
 
   # ==========================================
+  # 2. Redis (Cache, BullMQ & Socket Scaling)
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: app_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ==========================================
   # 2. Keycloak (IAM & SSO)
   # ==========================================
   keycloak:
@@ -72,6 +91,8 @@ services:
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_DATABASE: app_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080/auth
       KEYCLOAK_REALM: app-realm
       KEYCLOAK_CLIENT_ID: backend-client
@@ -84,13 +105,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       keycloak:
         condition: service_started
     networks:
       - app-network
 
   # ==========================================
-  # 4. React Frontend (Vite)
+  # 5. React Frontend (Vite)
   # ==========================================
   frontend:
     build:
@@ -112,7 +135,7 @@ services:
       - app-network
 
   # ==========================================
-  # 5. Nginx Reverse Proxy
+  # 6. Nginx Reverse Proxy
   # ==========================================
   nginx:
     image: nginx:alpine
@@ -135,3 +158,4 @@ networks:
 
 volumes:
   postgres_data:
+  redis_data:

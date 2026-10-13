@@ -1,13 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  // 1. API Global Prefix
+  // 1. HTTP Security Headers (Helmet)
+  app.use(
+    helmet({
+      contentSecurityPolicy: false, // Allows Swagger UI assets
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
+
+  // 2. API Global Prefix
   app.setGlobalPrefix('api');
 
   // 2. Strict Input Validation (Class-Validator)

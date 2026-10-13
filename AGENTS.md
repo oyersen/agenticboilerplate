@@ -48,8 +48,10 @@ Kullanıcı bu soruları yanıtladıktan sonra:
 ### D. Frontend Standartları (React + Vite)
 - **Bileşen Tekrarı YASAKTIR:** Sıfırdan buton, tablo, modal, input yazma! `frontend/src/components/ui/` altında hazır bulunan bileşenleri kullan:
   - `Button`, `Input`, `Select`, `Modal`, `Table`, `Badge`, `Card`, `Toast`.
-- **API İstemcisi:** Component içinde asla ikinci bir `axios` instance oluşturma. `src/api/client.ts` kullan. Token ekleme ve hata yakalama bu istemcide otomatiktir.
+- **API & Sunucu Verisi:** Ham `useEffect` içinde API çağrısı yapıp manuel loading state yönetmek YASAKTIR. `@tanstack/react-query` (`useQuery`, `useMutation`) kullanılmalıdır.
+- **Formlar ve Validasyon:** Formlarda manuel `useState` karmaşası yerine `react-hook-form` ve `zod` şemaları (`@hookform/resolvers/zod`) kullanılmalıdır.
 - **State Yönetimi:** Feature bazlı Zustand store slice'ları oluştur (`src/store/slices/*Slice.ts`).
+- **Grafik ve Dashboard:** Grafik gerektiren ekranlarda sadece `recharts` kullanılmalıdır.
 
 ### E. Hardcoding Yasağı & Dinamik Ayarlar (SystemSettings)
 - **Kod İçine Değer Gömmek KESİNLİKLE YASAKTIR:** Limitler, para tutarları, max dosya boyutları, periyotlar veya harici servis URL'leri asla TypeScript kodunun içine hardcode edilemez.
@@ -64,6 +66,11 @@ Kullanıcı bu soruları yanıtladıktan sonra:
 ### G. Güvenlik, Şifre Hijyeni ve Denetim İzi (Audit Logging)
 - **Zayıf Şifre Yasağı:** `.env` dosyalarında veya yapılandırmalarda asla sıradan/default şifreler (`postgres`, `admin`, `123456`, `backend-secret`) kullanılamaz. Üretim ortamında (`NODE_ENV=production`) sistem zayıf şifreleri otomatik olarak reddeder.
 - **Denetim İzi (Audit Log):** Admin tarafından yapılan tüm ayar değişiklikleri, özellik bayrakları veya kritik domain güncellemeleri `AuditLogService.log(...)` ile kayıt altına alınmalıdır.
+
+### H. Gerçek Zamanlılık (WebSocket) & Arka Plan Kuyruğu (BullMQ)
+- **Canlı Güncelleme:** Backend'de kritik bir domain nesnesi oluşturulduğunda veya güncellendiğinde `EventsGateway.broadcastEvent('ENTITY_UPDATED', data, 'entity_name')` ile olay fırlatılmalıdır.
+- **Frontend Canlı Senkronizasyon:** Frontend listelerinde `useLiveSync('entity_name', () => queryClient.invalidateQueries({ queryKey: ['entity_name'] }))` kullanılarak ekranların kullanıcılar arasında canlı taze kalması sağlanmalıdır.
+- **Asenkron İşler:** E-posta gönderimi, raporlama veya ağır hesaplamalar HTTP isteği içinde bekletilemez; `AppQueueModule` (BullMQ) kuyruklarına devredilmelidir.
 
 ---
 

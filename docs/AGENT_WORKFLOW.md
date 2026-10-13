@@ -122,20 +122,28 @@ export const productApi = {
 ### 6. Adım: Frontend Ekranı (`frontend/src/pages/products/ProductListPage.tsx`)
 
 ```tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Table, Column } from '../../components/ui/Table';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { productApi } from '../../api/product.api';
 import { Product } from '../../types/product';
+import { useLiveSync } from '../../core/socket/useLiveSync';
 
 export const ProductListPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    productApi.getAll().then(setProducts).finally(() => setLoading(false));
-  }, []);
+  // 1. TanStack Query ile otomatik cache & sunucu state'i
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => productApi.getAll(),
+  });
+
+  // 2. Canlı WebSocket senkronizasyonu (başka kullanıcı veri değiştirdiğinde anında taze)
+  useLiveSync('products', () => {
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+  });
 
   const columns: Column<Product>[] = [
     { key: 'name', header: 'Ürün Adı' },
@@ -148,7 +156,7 @@ export const ProductListPage: React.FC = () => {
       <Table
         columns={columns}
         data={products}
-        isLoading={loading}
+        isLoading={isLoading}
         keyExtractor={(p) => p.id}
       />
     </Card>
@@ -195,6 +203,40 @@ await this.auditLog.log({
   oldValues: { price: oldPrice },
   newValues: { price: newPrice },
 });
+```
+
+#### D. Canlı WebSocket Bildirimi Fırlatma:
+```typescript
+// Backend'de veri değişince tüm istemcilere sinyal gönder:
+this.eventsGateway.broadcastEvent('ENTITY_UPDATED', updatedProduct, 'products');
+```
+
+#### E. React Hook Form + Zod ile Tip Güvenli Form:
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string().min(2, 'En az 2 karakter olmalıdır'),
+  price: z.number().min(0, 'Fiyat 0 veya büyük olmalıdır'),
+});
+
+type FormValues = z.infer<typeof schema>;
+
+export const ProductForm = ({ onSubmit }: { onSubmit: (data: FormValues) => void }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Input label="Ürün Adı" error={errors.name?.message} {...register('name')} />
+      <Input label="Fiyat" type="number" error={errors.price?.message} {...register('price', { valueAsNumber: true })} />
+      <Button type="submit">Kaydet</Button>
+    </form>
+  );
+};
 ```
 
 ### 8. Adım: Doğrulama (Verification)

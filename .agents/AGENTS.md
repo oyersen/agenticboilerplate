@@ -24,5 +24,12 @@ This workspace is an enterprise boilerplate. All coding assistants MUST adhere t
 8. **Security & Audit Logging:**
    - Insecure default credentials in `.env` are strictly rejected in production.
    - Record admin modifications and sensitive business operations via `AuditLogService.log(...)`.
-9. **Self-Verification:**
+9. **Modern Frontend Stack & Server State:**
+   - Use `@tanstack/react-query` for all API data fetching, caching, and mutation. Do not use raw `useEffect` with manual loading states.
+   - Use `react-hook-form` + `zod` for type-safe validation in forms.
+   - Use `recharts` for analytics/charts.
+10. **Real-Time WebSockets & Background Queues:**
+   - Broadcast entity modifications via `EventsGateway.broadcastEvent(...)` and sync frontend lists with `useLiveSync(...)`.
+   - Offload heavy tasks (emails, notifications, batch processing) to BullMQ (`AppQueueModule`).
+11. **Self-Verification:**
    - Always run `npm run check` (runs typecheck on both frontend and backend) before completing a feature.

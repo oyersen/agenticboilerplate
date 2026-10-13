@@ -3,11 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppKeycloakModule } from './core/auth/keycloak.module';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { validateEnvironment } from './core/config/env.validation';
 import { SystemSettingsModule } from './core/settings/system-settings.module';
 import { FeaturesModule } from './core/features/features.module';
 import { FeatureFlagGuard } from './core/features/guards/feature-flag.guard';
 import { AuditLogModule } from './core/audit/audit-log.module';
+import { AppQueueModule } from './core/queue/queue.module';
+import { EventsModule } from './core/events/events.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -39,15 +42,33 @@ import { HealthModule } from './modules/health/health.module';
     // 3. Keycloak IAM Integration
     AppKeycloakModule,
 
-    // 4. Enterprise Core Foundation
+    // 4. Rate Limiting (Security Guard)
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: () => [
+        {
+          ttl: 60000,
+          limit: 100,
+        },
+      ],
+    }),
+
+    // 5. Enterprise Core Foundation
     SystemSettingsModule,
     FeaturesModule,
     AuditLogModule,
+    AppQueueModule,
+    EventsModule,
 
-    // 5. Default Health Check
+    // 6. Default Health Check
     HealthModule,
   ],
   providers: [
+    // Global Rate Limiting
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     // Global Dynamic Feature Flag enforcement
     {
       provide: APP_GUARD,

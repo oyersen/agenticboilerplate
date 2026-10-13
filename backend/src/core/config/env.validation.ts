@@ -34,6 +34,14 @@ export class EnvironmentVariables {
   DB_DATABASE!: string;
 
   @IsString()
+  @IsOptional()
+  REDIS_HOST: string = 'localhost';
+
+  @IsNumber()
+  @IsOptional()
+  REDIS_PORT: number = 6379;
+
+  @IsString()
   POSTGRES_USER!: string;
 
   @IsString()
