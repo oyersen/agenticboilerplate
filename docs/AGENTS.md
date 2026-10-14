@@ -1,6 +1,8 @@
 # Enterprise Agentic Boilerplate - Agent Operating Instructions
 
-> **Bu dosya, bu repoda çalışan tüm yapay zekâ kodlama ajanları (Antigravity, Cursor, Codex, Claude vb.) için bağlayıcı ve zorunlu çalışma anayasasıdır.**
+> **Dosya Konumu & Bağlayıcılık:**
+> Bu anayasanın fiziksel dosya yolu **`docs/AGENTS.md`**'dir. Ajan komutlarında doğrudan `AGENTS.md` olarak çağrılır.
+> Bu dosya, bu repoda çalışan tüm yapay zekâ kodlama ajanları (Antigravity, Cursor, Codex, Claude vb.) için bağlayıcı ve zorunlu çalışma anayasasıdır.
 
 ---
 
@@ -27,7 +29,7 @@ Kullanıcı bu soruları yanıtladıktan sonra:
 ### A. TypeScript ve Tip Güvenliği
 - **`any` TİPİ KESİNLİKLE YASAKTIR.** Hiçbir değişkende, parametrede, dönüş tipinde veya jenerikte `any` kullanılamaz.
 - Tip daraltması gerekiyorsa `unknown` + type guard veya generic interface'ler kullan.
-- Her yeni backend DTO/Entity için karşılık gelen frontend tipi `frontend/src/types/` altında tanımlanmalı ve senkronize tutulmalıdır.
+- **Tip Senkronizasyon Disiplini:** Backend DTO veya Entity'sinde yapılan her alan/tip değişikliğinde, `frontend/src/types/` altındaki karşılık gelen interface eksiksiz ve anında güncellenmelidir. Tip senkronizasyonu tamamlanmadan ve `npm run check` komutu her iki tarafta sıfır hata vermeden hiçbir geliştirme tamamlanmış sayılamaz.
 
 ### B. Veritabanı ve TypeORM Disiplini
 - Tüm yeni entity'ler `backend/src/core/entities/base.entity.ts` içindeki `BaseEntity` sınıfından türetilmelidir (`id` [UUID], `createdAt`, `updatedAt`, `isDeleted`).
@@ -44,13 +46,14 @@ Kullanıcı bu soruları yanıtladıktan sonra:
   - İstek yapan kullanıcı bilgisi için: `@CurrentUser()` decorator'ı kullanılmalıdır.
 - **Validasyon:** Tüm request body'ler için `class-validator` ve `class-transformer` ile DTO yazılmalıdır. Global `ValidationPipe` aktif olduğu için DTO'da tanımlanmayan alanlar otomatik reddedilir.
 - **Hata Yönetimi:** Standart NestJS `HttpException` sınıfları (`NotFoundException`, `BadRequestException`) kullanılmalıdır.
+- **Hız Sınırı (Rate Limiting):** Brute-force ve DoS ataklarına karşı `ThrottlerGuard` devrededir.
 
 ### D. Frontend Standartları (React + Vite)
 - **Bileşen Tekrarı YASAKTIR:** Sıfırdan buton, tablo, modal, input yazma! `frontend/src/components/ui/` altında hazır bulunan bileşenleri kullan:
   - `Button`, `Input`, `Select`, `Modal`, `Table`, `Badge`, `Card`, `Toast`.
-- **API & Sunucu Verisi:** Ham `useEffect` içinde API çağrısı yapıp manuel loading state yönetmek YASAKTIR. `@tanstack/react-query` (`useQuery`, `useMutation`) kullanılmalıdır.
+- **API & Sunucu Verisi (Server State):** Sayfa ve bileşenlerin veri çekme, yükleme ve önbellekleme (server state) ihtiyaçları için `useEffect` + manuel `useState(loading)` kullanımı YASAKTIR; bunun yerine `@tanstack/react-query` (`useQuery`, `useMutation`) kullanılmalıdır. `useEffect` yalnızca DOM olayları, abonelikler veya sunucu durumuyla ilişkisiz bileşen içi yan etkiler (side-effects) için kullanılabilir.
 - **Formlar ve Validasyon:** Formlarda manuel `useState` karmaşası yerine `react-hook-form` ve `zod` şemaları (`@hookform/resolvers/zod`) kullanılmalıdır.
-- **State Yönetimi:** Feature bazlı Zustand store slice'ları oluştur (`src/store/slices/*Slice.ts`).
+- **State Yönetimi:** Client-side UI state için feature bazlı Zustand store slice'ları oluştur (`src/store/slices/*Slice.ts`).
 - **Grafik ve Dashboard:** Grafik gerektiren ekranlarda sadece `recharts` kullanılmalıdır.
 
 ### E. Hardcoding Yasağı & Dinamik Ayarlar (SystemSettings)
@@ -64,7 +67,7 @@ Kullanıcı bu soruları yanıtladıktan sonra:
   - Frontend arayüzü: `<FeatureGate flag="FEATURE_KEY">` bileşeni ile sarmalanmalıdır.
 
 ### G. Güvenlik, Şifre Hijyeni ve Denetim İzi (Audit Logging)
-- **Zayıf Şifre Yasağı:** `.env` dosyalarında veya yapılandırmalarda asla sıradan/default şifreler (`postgres`, `admin`, `123456`, `backend-secret`) kullanılamaz. Üretim ortamında (`NODE_ENV=production`) sistem zayıf şifreleri otomatik olarak reddeder.
+- **Zayıf Şifre Yasağı:** Üretim ortamında (`NODE_ENV=production`) default/zayıf şifreler (`postgres`, `admin`, `123456`, `backend-secret`) kesinlikle kullanılamaz; sistem başlangıç aşamasında (`env.validation.ts`) hata fırlatarak çalışmayı durdurur.
 - **Denetim İzi (Audit Log):** Admin tarafından yapılan tüm ayar değişiklikleri, özellik bayrakları veya kritik domain güncellemeleri `AuditLogService.log(...)` ile kayıt altına alınmalıdır.
 
 ### H. Gerçek Zamanlılık (WebSocket) & Arka Plan Kuyruğu (BullMQ)
@@ -91,19 +94,17 @@ Yeni bir modül veya özellik eklerken şu zinciri **sırasıyla ve eksiksiz** t
    backend/src/modules/<feature>/<feature>.module.ts (AppModule'e ekle)
 
 3. Frontend Type & API:
-   frontend/src/types/<feature>.ts (Backend DTO/Entity ile tam uyumlu)
+   frontend/src/types/<feature>.ts (Backend DTO/Entity ile tam uyumlu ve senkronize)
    frontend/src/api/<feature>.api.ts (Endpoints)
 
 4. Frontend State & UI:
-   frontend/src/store/<feature>Store.ts (Zustand)
-   frontend/src/pages/<feature>/<Feature>ListPage.tsx
-   frontend/src/pages/<feature>/<Feature>FormModal.tsx
+   frontend/src/pages/<feature>/<Feature>ListPage.tsx (TanStack Query + useLiveSync)
+   frontend/src/pages/<feature>/<Feature>FormModal.tsx (React Hook Form + Zod)
    frontend/src/router/index.tsx (Rol korumalı rota tanımla)
    frontend/src/layout/navigation.ts (Sidebar menüsüne link ekle)
 
 5. Doğrulama (Self-Check):
-   Backend: npm run build (veya npx tsc --noEmit)
-   Frontend: npm run build (veya npx tsc --noEmit)
+   Kök dizinden: npm run check (Hem frontend hem backend sıfır hata vermelidir)
 ```
 
 ---
@@ -114,9 +115,15 @@ Yeni bir modül veya özellik eklerken şu zinciri **sırasıyla ve eksiksiz** t
   - `/` -> Frontend React (:3000)
   - `/api` -> Backend NestJS (:5000)
   - `/auth` -> Keycloak (:8080)
-- **Keycloak Admin:** `http://localhost:8080` (admin / admin)
-- **PostgreSQL:** `localhost:5432` (postgres / postgres)
+  - `/socket.io` -> WebSocket Gateway (:5000)
+- **Keycloak Admin:** `http://localhost:8080` (Varsayılan Yerel: admin / admin)
+- **PostgreSQL:** `localhost:5432` (Varsayılan Yerel: postgres / postgres)
+- **Redis (Cache & BullMQ):** `localhost:6379`
 - **Swagger Dokümantasyonu:** `http://localhost:80/api/docs`
+
+> ⚠️ **Önemli Ortam Ayrımı Notu:**
+> Yukarıda belirtilen `admin / admin` ve `postgres / postgres` kimlik bilgileri **yalnızca yerel geliştirme (Local Development)** ortamı için önceden tanımlanmıştır. 
+> Üretim ortamında (`NODE_ENV=production`) bu zayıf değerlerin kullanımı `backend/src/core/config/env.validation.ts` tarafından sıkı bir şekilde engellenmiştir ve uygulama boot aşamasında güvenli şekilde durdurulur.
 
 ---
 

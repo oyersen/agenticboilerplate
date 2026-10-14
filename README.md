@@ -14,7 +14,7 @@ docker compose up --build -d
 
 ### Servis Erişim Bilgileri:
 
-| Servis | URL | Varsayılan Kullanıcı / Şifre |
+| Servis | URL | Varsayılan Kimlik (Yalnızca Yerel Dev) |
 | :--- | :--- | :--- |
 | **Ana Uygulama (Nginx Entrypoint)** | `http://localhost:80` | `admin@boilerplate.local` / `admin` |
 | **Standart Test Kullanıcısı** | `http://localhost:80` | `user@boilerplate.local` / `user` |
@@ -23,6 +23,8 @@ docker compose up --build -d
 | **Keycloak Yönetim Paneli** | `http://localhost:8080/auth` | `admin` / `admin` |
 | **PostgreSQL Veritabanı** | `localhost:5432` | `postgres` / `postgres` (DB: `app_db`, `keycloak_db`) |
 | **Redis (Cache & BullMQ)** | `localhost:6379` | Arka plan kuyrukları ve önbellek |
+
+> 🔒 **Üretim Ortamı Notu:** Yukarıdaki basit kimlik bilgileri sadece yerel geliştirme için kolaylık sağlar. Üretim ortamında (`NODE_ENV=production`) sistem bu şifreleri otomatik olarak reddeder ve başlamaz.
 
 ---
 
