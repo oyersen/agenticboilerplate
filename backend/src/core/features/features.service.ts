@@ -28,9 +28,10 @@ export class FeaturesService implements OnModuleInit {
 
   isEnabled(key: string, userRoles?: string[]): boolean {
     const flag = this.flagsCache.get(key);
-    // If not registered in database, allow by default or keep default open
-    if (!flag) return true;
-    if (!flag.isEnabled) return false;
+    // Fail-Closed Security Policy: If flag does not exist in DB or cache, deny by default
+    if (!flag || !flag.isEnabled) {
+      return false;
+    }
 
     // If allowedRoles is specified, check user's roles
     if (flag.allowedRoles && flag.allowedRoles.length > 0) {

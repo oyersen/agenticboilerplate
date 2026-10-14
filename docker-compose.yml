@@ -81,6 +81,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     container_name: app_backend
     restart: always
     environment:
@@ -88,8 +89,10 @@ services:
       PORT: 5000
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USERNAME: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DB_USERNAME: ${DB_USERNAME:-${POSTGRES_USER:-postgres}}
+      DB_PASSWORD: ${DB_PASSWORD:-${POSTGRES_PASSWORD:-postgres}}
+      POSTGRES_USER: ${POSTGRES_USER:-${DB_USERNAME:-postgres}}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-${DB_PASSWORD:-postgres}}
       DB_DATABASE: app_db
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -119,6 +122,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: development
     container_name: app_frontend
     restart: always
     environment:

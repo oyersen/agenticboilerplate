@@ -31,9 +31,25 @@ async function bootstrap() {
     }),
   );
 
-  // 3. CORS Configuration
+  // 3. W3C Compliant CORS Configuration
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : [
+        'http://localhost',
+        'http://localhost:80',
+        'http://localhost:3000',
+        'http://localhost:5000',
+      ];
+
   app.enableCors({
-    origin: '*',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server) or allowed origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS policy blocked access from origin: ${origin}`));
+      }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

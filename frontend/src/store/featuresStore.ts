@@ -23,7 +23,7 @@ export const useFeaturesStore = create<FeaturesState>((set, get) => ({
   },
   isEnabled: (key: string) => {
     const { flags } = get();
-    // Default open if flag is not defined, otherwise respects boolean
-    return flags[key] !== undefined ? flags[key] : true;
+    // Fail-Closed Security Policy: Deny by default unless explicitly true
+    return flags[key] === true;
   },
 }));

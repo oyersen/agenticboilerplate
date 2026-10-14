@@ -58,7 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           // Token auto-refresh interval (every 30 seconds)
-          setInterval(() => {
+          const refreshInterval = setInterval(() => {
             keycloak
               .updateToken(70)
               .then((refreshed) => {
@@ -70,6 +70,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 keycloak.login();
               });
           }, 30000);
+
+          return () => {
+            clearInterval(refreshInterval);
+          };
         }
         setInitialized(true);
       })
