@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { Activity, Server, ShieldCheck, Database, RefreshCw } from 'lucide-react';
+import { Server, ShieldCheck, Database, RefreshCw, Zap } from 'lucide-react';
 import api from '../../api/client';
 import { useAuth } from '../../auth/KeycloakContext';
+import { useLiveSync } from '../../core/socket/useLiveSync';
 
 interface HealthResponse {
   status: string;
@@ -14,26 +16,27 @@ interface HealthResponse {
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchHealth = async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  // 1. TanStack Query ile anayasaya (AGENTS.md 2.D) uygun Server State Yönetimi
+  const {
+    data: health,
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery<HealthResponse>({
+    queryKey: ['health'],
+    queryFn: async () => {
       const response = await api.get<HealthResponse>('/health');
-      setHealth(response.data);
-    } catch {
-      setError('Backend API ile bağlantı kurulamadı.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return response.data;
+    },
+    refetchInterval: 30000, // 30 saniyede bir otomatik polling
+  });
 
-  useEffect(() => {
-    fetchHealth();
-  }, []);
+  // 2. Canlı soket üzerinden sağlık/sistem sinyali gelirse otomatik tazeleyen hook
+  useLiveSync('health', () => {
+    refetch();
+  });
 
   return (
     <div className="space-y-8">
@@ -57,7 +60,7 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* Metrics & Status Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
@@ -66,7 +69,7 @@ export const DashboardPage: React.FC = () => {
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase">NestJS API Durumu</p>
               <h3 className="text-lg font-bold text-slate-800 mt-0.5">
-                {loading ? 'Kontrol ediliyor...' : health ? 'Çalışıyor' : 'Hata'}
+                {isLoading ? 'Kontrol ediliyor...' : isError ? 'Bağlantı Hatası' : 'Çalışıyor'}
               </h3>
             </div>
           </div>
@@ -95,6 +98,18 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         </Card>
+
+        <Card>
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <Zap className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500 uppercase">Kuyruk & Önbellek</p>
+              <h3 className="text-lg font-bold text-slate-800 mt-0.5">Redis 7 + BullMQ</h3>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Health Check Details Card */}
@@ -102,14 +117,21 @@ export const DashboardPage: React.FC = () => {
         title="Uçtan Uca Sağlık Kontrolü (End-to-End Health Check)"
         subtitle="Frontend -> Nginx -> NestJS -> PostgreSQL zinciri"
         action={
-          <Button variant="outline" size="sm" onClick={fetchHealth} isLoading={loading}>
-            <RefreshCw className="w-4 h-4 mr-1.5" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            isLoading={isFetching}
+          >
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${isFetching ? 'animate-spin' : ''}`} />
             Yenile
           </Button>
         }
       >
-        {error ? (
-          <div className="p-4 rounded-lg bg-rose-50 text-rose-700 text-sm">{error}</div>
+        {isError ? (
+          <div className="p-4 rounded-lg bg-rose-50 text-rose-700 text-sm">
+            Backend API ile bağlantı kurulamadı veya servis yanıt vermiyor.
+          </div>
         ) : health ? (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
