@@ -1,6 +1,6 @@
 # Teknik Mimari ve Sistem Tasarımı
 
-Bu doküman, sistemin ağ yapısını, kimlik doğrulama akışını ve katmanlar arası veri transferini açıklar.
+Bu doküman, sistemin ağ yapısını, kimlik doğrulama akışını, gerçek zamanlı olay iletimini ve arka plan iş kuyruğunu açıklar.
 
 ---
 
@@ -13,16 +13,17 @@ Kullanıcı tarayıcısından gelen tüm HTTP ve WebSocket istekleri tek bir gir
                                      │
                                      ▼
                         [ Nginx Proxy (:80) ]
-                        ┌────────────┼────────────┐
-                        │            │            │
-            location /  │   location │   location │
-                        │      /api/ │      /auth/│
-                        ▼            ▼            ▼
-                 [ React/Vite ]  [ NestJS ]  [ Keycloak ]
-                    (:3000)       (:5000)      (:8080)
-                                     │            │
-                                     ▼            ▼
-                             [ PostgreSQL 16 (app_db & keycloak_db) ]
+        ┌───────────────────┬────────┴───────────┬────────────────────┐
+        │                   │                    │                    │
+   location /         location /api/       location /socket.io/  location /auth/
+        │                   │                    │                    │
+        ▼                   └──────────┬─────────┘                    ▼
+ [ React/Vite ]                 [ NestJS API & Ws ]              [ Keycloak ]
+    (:3000)                          (:5000)                        (:8080)
+                               ┌─────────┴─────────┐                  │
+                               ▼                   ▼                  ▼
+                    [ PostgreSQL 16 ]     [ Redis 7 (Alpine) ]  [ Postgres ]
+                        (app_db)           (Cache & BullMQ)    (keycloak_db)
 ```
 
 ---
@@ -50,7 +51,14 @@ Tarayıcı                 Keycloak                 Nginx / NestJS
 
 ---
 
-## 3. Veritabanı ve Migration Stratejisi
+## 3. Gerçek Zamanlılık (WebSocket) & Arka Plan Kuyrukları (BullMQ)
+
+- **WebSocket (Socket.io):** Tarayıcılar `/socket.io/` geçidi üzerinden doğrudan `EventsGateway`'e bağlanır. Bir kayıt güncellendiğinde backend `broadcastEvent` veya `emitToRoom` ile anlık sinyal fırlatır. Frontend'deki `useLiveSync` hook'u bu sinyali yakalayarak TanStack Query cache'ini otomatik yeniler (sayfa yenileme gerekmez).
+- **Arka Plan Kuyruğu (BullMQ + Redis):** E-posta gönderimi, PDF/rapor üretimi veya dış webhook çağrıları gibi bloklayıcı işlemler `AppQueueModule` üzerinden Redis kuyruklarına devredilir.
+
+---
+
+## 4. Veritabanı ve Migration Stratejisi
 
 - PostgreSQL üzerinde iki bağımsız veritabanı bulunur:
   1. `keycloak_db`: Keycloak'ın kendi kullanıcı, oturum ve istemci verileri.

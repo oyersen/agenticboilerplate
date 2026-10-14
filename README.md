@@ -19,8 +19,10 @@ docker compose up --build -d
 | **Ana Uygulama (Nginx Entrypoint)** | `http://localhost:80` | `admin@boilerplate.local` / `admin` |
 | **Standart Test Kullanıcısı** | `http://localhost:80` | `user@boilerplate.local` / `user` |
 | **Swagger API Dokümantasyonu** | `http://localhost:80/api/docs` | Keycloak Bearer Token ile yetkilendirilir |
+| **WebSocket Gateway (Socket.io)** | `http://localhost:80/socket.io/` | Canlı veri & bildirim senkronizasyonu |
 | **Keycloak Yönetim Paneli** | `http://localhost:8080/auth` | `admin` / `admin` |
 | **PostgreSQL Veritabanı** | `localhost:5432` | `postgres` / `postgres` (DB: `app_db`, `keycloak_db`) |
+| **Redis (Cache & BullMQ)** | `localhost:6379` | Arka plan kuyrukları ve önbellek |
 
 ---
 
@@ -44,28 +46,30 @@ Ajan bu talimatı aldığında:
 ```text
 enterprise-agent-boilerplate/
 ├── .agents/
-│   └── AGENTS.md                  # Ajanın anayasası ve zorunlu kuralları
-├── AGENTS.md                      # Ajan çalışma talimatları (Kök dizin)
-├── docker-compose.yml             # Tüm servislerin orkestrasyonu
+│   └── AGENTS.md                  # docs/AGENTS.md köprü referansı
+├── AGENTS.md                      # docs/AGENTS.md köprü referansı (Kök)
+├── docker-compose.yml             # Postgres, Redis, Keycloak, Backend, Frontend, Nginx
 ├── docker/
-│   ├── nginx/default.conf         # / (Frontend), /api (Backend), /auth (Keycloak) reverse proxy
+│   ├── nginx/default.conf         # /, /api, /auth, /socket.io reverse proxy
 │   ├── keycloak/realm-export.json # Hazır realm, client ve test kullanıcıları
 │   └── postgres/init-multi-db.sh  # Çoklu veritabanı başlatıcı
-├── backend/                       # NestJS 10 + TypeORM + Keycloak Guard'ları
+├── backend/                       # NestJS 10 + TypeORM + Redis + BullMQ + Socket.io
 │   ├── src/
-│   │   ├── core/                  # BaseEntity, Keycloak Auth Guards, TypeORM DataSource
+│   │   ├── core/                  # BaseEntity, Auth, Settings, Features, Audit, Queue, Events
 │   │   ├── modules/health/        # Sağlık kontrolü (/api/health)
 │   │   └── migrations/            # TypeORM veritabanı göçleri
-├── frontend/                      # React 18 + Vite + Tailwind + Keycloak-js
+├── frontend/                      # React 18 + Vite + TanStack Query + Zod + Socket.io
 │   ├── src/
 │   │   ├── auth/                  # Keycloak AuthProvider & useAuth hook'u
-│   │   ├── api/client.ts          # Otomatik Bearer token enjekte eden Axios istemcisi
-│   │   ├── components/ui/         # Hazır Button, Input, Modal, Table, Select, Badge, Card
+│   │   ├── core/socket/           # WebSocket SocketContext & useLiveSync
+│   │   ├── api/                   # Axios istemcisi ve API modülleri
+│   │   ├── components/ui/         # Hazır Button, Input, Modal, Table, Select, Badge, Card, Toast
 │   │   ├── layout/                # Sidebar, Header, AppLayout
-│   │   └── pages/dashboard/       # Başlangıç ve sağlık kontrol paneli
+│   │   └── pages/dashboard/       # Başlangıç ve kontrol paneli
 └── docs/
+    ├── AGENTS.md                  # Ana Ajan Anayasası (Single Source of Truth)
     ├── ARCHITECTURE.md            # Detaylı mimari ve ağ akış şeması
-    └── AGENT_WORKFLOW.md          # Ajan için örnek dikey dilim (Vertical slice) rehberi
+    └── AGENT_WORKFLOW.md          # Ajan için dikey dilim (Vertical slice) ve kod tarifleri
 ```
 
 ---

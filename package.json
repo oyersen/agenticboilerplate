@@ -1,13 +1,21 @@
 {
   "name": "enterprise-agent-boilerplate",
   "version": "1.0.0",
-  "description": "Enterprise Agentic Boilerplate with NestJS, Keycloak, and React",
+  "description": "Enterprise Agentic Boilerplate with NestJS, Keycloak, PostgreSQL, Redis, and React",
   "private": true,
   "scripts": {
     "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck",
     "typecheck:backend": "npm --prefix backend run typecheck",
     "typecheck:frontend": "npm --prefix frontend run typecheck",
     "build": "npm --prefix backend run build && npm --prefix frontend run build",
-    "check": "npm run typecheck"
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "check": "npm run typecheck",
+    "format:backend": "npm --prefix backend run format",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   }
 }
