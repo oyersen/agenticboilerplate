@@ -24,6 +24,11 @@ export class PaginationQueryDto {
   @IsIn(['ASC', 'DESC'])
   order?: 'ASC' | 'DESC' = 'DESC';
 
+  @ApiPropertyOptional({ default: 'createdAt' })
+  @IsOptional()
+  @IsString()
+  sortBy?: string = 'createdAt';
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

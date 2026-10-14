@@ -1,15 +1,18 @@
 import React from 'react';
+import { cn } from '../../lib/utils';
 
 export interface BadgeProps {
   children: React.ReactNode;
   variant?: 'success' | 'warning' | 'danger' | 'info' | 'default';
   size?: 'sm' | 'md';
+  className?: string;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
   children,
   variant = 'default',
   size = 'md',
+  className,
 }) => {
   const variants = {
     default: 'bg-slate-100 text-slate-800',
@@ -26,7 +29,12 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full font-medium ${variants[variant]} ${sizes[size]}`}
+      className={cn(
+        'inline-flex items-center rounded-full font-medium',
+        variants[variant],
+        sizes[size],
+        className,
+      )}
     >
       {children}
     </span>

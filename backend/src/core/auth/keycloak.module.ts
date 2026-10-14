@@ -23,7 +23,8 @@ import {
           'KEYCLOAK_CLIENT_ID',
           'backend-client',
         ),
-        secret: configService.get<string>('KEYCLOAK_SECRET', 'backend-secret'),
+        secret: configService.get<string>('KEYCLOAK_CLIENT_SECRET') ||
+          configService.get<string>('KEYCLOAK_SECRET', 'backend-secret'),
         policyEnforcement: PolicyEnforcementMode.PERMISSIVE,
         tokenValidation: TokenValidation.ONLINE,
       }),

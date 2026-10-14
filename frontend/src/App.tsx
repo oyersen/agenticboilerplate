@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './auth/KeycloakContext';
 import { SocketProvider } from './core/socket/SocketContext';
+import { ToastProvider } from './components/ui/ToastProvider';
 import { AppRouter } from './router';
+import { useFeaturesStore } from './store/featuresStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,16 +16,30 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Boots feature flags on first render */
+const AppBootstrap: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const fetchFeatures = useFeaturesStore((s) => s.fetchFeatures);
+  useEffect(() => {
+    fetchFeatures();
+  }, [fetchFeatures]);
+  return <>{children}</>;
+};
+
 export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SocketProvider>
-          <AppRouter />
-        </SocketProvider>
+        <AppBootstrap>
+          <SocketProvider>
+            <ToastProvider>
+              <AppRouter />
+            </ToastProvider>
+          </SocketProvider>
+        </AppBootstrap>
       </AuthProvider>
     </QueryClientProvider>
   );
 };
 
 export default App;
+

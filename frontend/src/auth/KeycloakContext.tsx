@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useMemo, ReactNode } from 'react';
 import { keycloak } from './keycloak';
 import { setAuthToken } from '../api/client';
 
@@ -30,6 +30,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<UserProfile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
 
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval>>(null);
+
   useEffect(() => {
     keycloak
       .init({
@@ -58,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
 
           // Token auto-refresh interval (every 30 seconds)
-          const refreshInterval = setInterval(() => {
+          refreshIntervalRef.current = setInterval(() => {
             keycloak
               .updateToken(70)
               .then((refreshed) => {
@@ -70,16 +72,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 keycloak.login();
               });
           }, 30000);
-
-          return () => {
-            clearInterval(refreshInterval);
-          };
         }
         setInitialized(true);
       })
       .catch(() => {
         setInitialized(true);
       });
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
   }, []);
 
   const hasRole = (role: string): boolean => roles.includes(role);

@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -43,8 +45,15 @@ export const Modal: React.FC<ModalProps> = ({
     xl: 'max-w-xl',
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  const titleId = `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}`;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
@@ -53,16 +62,22 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Dialog */}
       <div
-        className={`relative w-full ${maxWidths[maxWidth]} bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 transform transition-all z-10`}
+        className={cn(
+          'relative w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 transform transition-all z-10',
+          maxWidths[maxWidth],
+        )}
       >
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+            <h3 id={titleId} className="text-lg font-semibold text-slate-900">
+              {title}
+            </h3>
             {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
           </div>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 rounded-lg p-1 transition-colors"
+            aria-label="Kapat"
           >
             <X className="w-5 h-5" />
           </button>
@@ -76,6 +91,7 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

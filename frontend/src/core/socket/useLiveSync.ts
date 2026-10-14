@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSocket, LiveEvent } from './SocketContext';
 
 /**
@@ -15,13 +15,15 @@ export function useLiveSync<T = unknown>(
   onUpdate: (event: LiveEvent<T>) => void,
 ) {
   const { socket } = useSocket();
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   useEffect(() => {
     if (!socket) return;
 
     const handler = (event: LiveEvent<T>) => {
       if (!event.entity || event.entity === entityName) {
-        onUpdate(event);
+        onUpdateRef.current(event);
       }
     };
 
@@ -30,5 +32,6 @@ export function useLiveSync<T = unknown>(
     return () => {
       socket.off('live_event', handler);
     };
-  }, [socket, entityName, onUpdate]);
+  }, [socket, entityName]);
 }
+

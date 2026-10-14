@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../../lib/utils';
 
 export interface CardProps {
   title?: string;
@@ -16,7 +17,7 @@ export const Card: React.FC<CardProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden ${className}`}>
+    <div className={cn('bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden', className)}>
       {(title || action) && (
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <div>

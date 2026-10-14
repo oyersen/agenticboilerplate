@@ -8,6 +8,8 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
+  // Graceful shutdown (close DB pools, Redis, Socket.io on SIGTERM)
+  app.enableShutdownHooks();
   // 1. HTTP Security Headers (Helmet)
   app.use(
     helmet({
@@ -54,32 +56,34 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // 4. OpenAPI / Swagger Setup
-  const config = new DocumentBuilder()
-    .setTitle('Enterprise Agentic Boilerplate API')
-    .setDescription('Automated API documentation with Keycloak Bearer Token support')
-    .setVersion('1.0.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'Authorization',
-        description: 'Enter Keycloak Access Token',
-        in: 'header',
-      },
-      'bearer',
-    )
-    .build();
+  // 4. OpenAPI / Swagger Setup (Disabled in Production)
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Enterprise Agentic Boilerplate API')
+      .setDescription('Automated API documentation with Keycloak Bearer Token support')
+      .setVersion('1.0.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          description: 'Enter Keycloak Access Token',
+          in: 'header',
+        },
+        'bearer',
+      )
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+    logger.log(`📚 Swagger documentation available at: http://localhost:${port}/api/docs`);
+  }
 
   // 5. Start Server
   const port = process.env.PORT || 5000;
   await app.listen(port);
   logger.log(`🚀 Application is running on: http://localhost:${port}/api`);
-  logger.log(`📚 Swagger documentation available at: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();
